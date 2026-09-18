@@ -128,8 +128,8 @@
       <button id="mmToggle" style="flex:1;height:60px;background:#555">👆 ПО КНОПКЕ<br><small>слушает только после «ГОВОРИТЬ»</small></button>
     </div>
     <button id="answerNow" style="height:64px;background:#b8860b;touch-action:manipulation">⏭ ОТВЕЧАЙ<br><small>гость договорил — конец слушания, отвечай сейчас</small></button>
-    <button id="stopTalk" style="background:#8e2020;height:64px;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none">✋ ХВАТИТ<br><small>замолчать и не слушать · связь остаётся</small></button>
-    <button id="hushBtn2" style="background:#5a1616;height:56px;touch-action:manipulation">⏹ ПОЛНЫЙ СТОП<br><small>оборвать связь совсем · продолжить — «ГОВОРИТЬ»</small></button>
+    <button id="stopTalk" style="background:#8e2020;height:64px;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none">✋ ХВАТИТ<br><small>замолчи сейчас · связь жива, нажми ещё раз — снова слушает</small></button>
+    <button id="hushBtn2" style="background:#5a1616;height:56px;touch-action:manipulation">⏹ ПОЛНЫЙ СТОП<br><small>связь разорвана, деньги не идут · дальше — «Подключиться»</small></button>
 
     <!-- РЕЖИССЁР: в уличных пультах эту карточку прятали — на ходу печатать
          некогда, режиссировали голосом. BoS-Bot стоит на сцене стационарно —
@@ -191,22 +191,15 @@
     <div class="card">
       <label>⚡ Быстрые действия — скажет сразу</label>
       <div style="font-size:13px;color:#9aa4b0;margin:-2px 0 8px;line-height:1.45">
-        <b>Сначала выбери режим.</b> Робот больше НЕ заговаривает сам в тишину —
-        начало разговора всегда с кнопки <b>🗣 Заговорить первым</b>. Если гость
-        сказал своё, а робот молчит (шумно вокруг) — <b>⏭ ОТВЕЧАЙ</b>. Конец
-        встречи — <b>👋 Завершить</b>.
+        Что происходит вокруг — скажи ему голосом по-русски или пошли текстом
+        в «скрытый контекст» ниже. Начало разговора — <b>🗣 Заговорить первым</b>.
+        Гость договорил, а робот молчит — <b>⏭ ОТВЕЧАЙ</b>.
       </div>
       <div class="quick" style="margin-bottom:10px">
-        <button id="mdEmpf" style="background:#2c3e50">🚪 ВСТРЕЧА<br><small>17:30, вход Halle 21</small></button>
-        <button id="mdHafen" style="background:#1f618d">🛶 ХАФЕНКАНТЕ<br><small>18:15, сплавщики</small></button>
-        <button id="mdHalle" style="background:#7d5fc4">🍺 ХАЛЛЕ<br><small>бочка, речи, буфет</small></button>
-        <button id="mdFuehr" style="background:#1e8449">🏭 ЭКСКУРСИЯ<br><small>с 19:30</small></button>
-        <button id="mdFest" style="background:#b8860b">💃 ПРАЗДНИК<br><small>с 20:00, танцы</small></button>
-      </div>
-      <div id="mdNow" style="font-size:13px;color:#9aa4b0;margin:-4px 0 8px">режим: <b>не задан</b> — нажми тот, что идёт сейчас</div>
+      <!-- 18.09: кнопки режимов убраны — контекст даётся голосом -->
+
       <div class="quick">
         <button id="qaHello">🗣 Заговорить первым</button>
-        <button id="qaLouder">🔊 Громче, повтори</button>
         <button id="qaAnswer" class="hidden" style="display:none">⏭ ОТВЕЧАЙ</button><!-- 14.09: дубль спрятан, большая ОТВЕЧАЙ вверху -->
         <button id="qaBye">👋 Завершить</button>
       </div>
@@ -276,7 +269,7 @@
     </div>
 
     <div class="row">
-      <button id="stopBtn">⏹ Завершить</button>
+      <button id="stopBtn" class="hidden" style="display:none">⏹ Завершить</button><!-- 18.09: дубль ПОЛНОГО СТОПА -->
     </div>
 
     <div class="card hidden" style="display:none">
@@ -302,71 +295,17 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 14:40',
+  version: '18.09.2026 16:05',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
   // кнопки, переживает переподключение. btn — id кнопки в разметке выше.
-  defaultMode: 'EMPFANG',
-  modes: {
-    EMPFANG: { btn:'mdEmpf', label:'🚪 ВСТРЕЧА',
-      text:'MODUS: EMPFANG. Du stehst am Eingang der Halle einundzwanzig und begrüßt die ankommenden Gäste des Jubiläums. Kurz halten: zwei, drei Sätze je Gast, hinter jedem wartet der nächste.' },
-    HAFENKANTE: { btn:'mdHafen', label:'🛶 ХАФЕНКАНТЕ',
-      text:'MODUS: HAFENKANTE. Du bist draußen am Teltow-Kanal auf dem Firmengelände. Die Flößer aus Wallenfels kommen über das Wasser, die Band spielt. Festlich, warm, dem Wasser und den Flößern zugewandt.' },
-    HALLE: { btn:'mdHalle', label:'🍺 ХАЛЛЕ',
-      text:'MODUS: HALLE. Alle sind in der Halle einundzwanzig: Musik, Bierfass, Reden, Buffet. Wenn jemand zur Halle spricht, schweigst du. Sonst Gespräche an den Tischen, drei bis fünf Sätze.' },
-    FUEHRUNG: { btn:'mdFuehr', label:'🏭 ЭКСКУРСИЯ',
-      text:'MODUS: BETRIEBSBESICHTIGUNG. Du gehst mit einer Führung über das Gelände und erzählst vom Haus und von diesem Ort. Keine Sicherheitshinweise, keine Kommentare zu laufenden Maschinen oder Kränen.' },
-    FEST: { btn:'mdFest', label:'💃 ПРАЗДНИК',
-      text:'MODUS: FEST. Es ist Abend, Spiele, Musik und Tanz. Locker, festlich, kurz. Musikwünsche nimmst du entgegen und trägst sie den Musikanten vor; ein bestimmtes Lied versprichst du nie.' },
-  },
-
-  // Быстрые кнопки контекста — свои под каждый режим. Нажатие кладёт текст
-  // в поле «Скрытый контекст», отправка — отдельной кнопкой.
-  quick: {
-    EMPFANG: [
-      ['👋 Гость подошёл', 'Ein Gast kommt auf dich zu. Begrüße kurz und königlich und frag, wen du vor dir hast. Zwei, drei Sätze — hinter ihm warten die nächsten.'],
-      ['👥 Компания / семья', 'Eine ganze Gruppe steht vor dir, mehrere Erwachsene, vielleicht Kinder. Begrüße die Runde in einem Satz und stell EINE Frage an alle.'],
-      ['🎩 Кто ты и почему здесь', 'Der Gast fragt, wer du bist und was du hier machst. Du bist Ludwig der Zweite von Robotollern, geladener Gast dieses Hauses zum hundertfünfundzwanzigsten Jubiläum — das Haus stammt aus Oberfranken, aus deinem Königreich.'],
-      ['🤳 Фото', 'Jemand will ein Foto oder Selfie mit dir. Ein königlicher Satz dazu, dann weiter im Gespräch.'],
-      ['🚪 Проводи дальше', 'Schick den Gast freundlich weiter: es geht zweihundert Meter weiter auf das Firmengelände an die Hafenkante, dort beginnt der Abend.'],
-      ['🧒 Ребёнок', 'Vor dir steht ein Kind. Ganz kurz, ganz warm: ein Satz und eine einzige Frage. Keinen Vornamen raten.'],
-      ['🗣 Дословно', 'Sage den folgenden Satz WÖRTLICH und unverändert, Wort für Wort: "___" — (впиши точную фразу вместо ___)'],
-    ],
-    HAFENKANTE: [
-      ['🛶 Сплавщики прибыли', 'Die Flößer aus Wallenfels kommen jetzt über den Teltow-Kanal an der Hafenkante an. Begrüße sie als Ehrengäste dieses Abends — Männer aus dem Ort, in dem dieses Haus neunzehnhundert gegründet wurde. Sag NICHTS darüber, worauf sie ankommen.'],
-      ['🙇 Долг короны', 'Sag den Flößern das Wahre: der Ludwig Donau Main Kanal wurde von deinem Großvater Ludwig dem Ersten in Auftrag gegeben, und dieser Kanal und die Eisenbahn haben ihr Gewerbe verdrängt. Heute kommt die Krone, um ihnen die Ehre zu erweisen. Warm, kein Scherz auf ihre Kosten.'],
-      ['💧 Канал и год 1900', 'Erzähl das Wunder dieses Abends: der Teltow-Kanal wurde neunzehnhundert begonnen — im selben Jahr, in dem Johann Müller Zeiner das Haus gegründet hat. Das Wasser und das Haus sind gleich alt.'],
-      ['🎺 Оркестр играет', 'Die Band spielt gerade an der Hafenkante. Ein, zwei Sätze dazu, warm und festlich, dann eine Frage an die Leute um dich.'],
-      ['👋 Гость подошёл', 'Ein Gast kommt auf dich zu. Begrüße kurz und frag, wen du vor dir hast.'],
-      ['🗣 Дословно', 'Sage den folgenden Satz WÖRTLICH und unverändert, Wort für Wort: "___" — (впиши точную фразу вместо ___)'],
-    ],
-    HALLE: [
-      ['🤫 Речь — молчи', 'Jemand spricht jetzt zur Halle. Du schweigst, bis dir gesagt wird, dass du wieder sprechen darfst. Sag GAR NICHTS.'],
-      ['🍺 Бочку открывают', 'Das Bierfass wird jetzt angezapft. Kommentiere es königlich als Zeremonie — du befiehlst, staunst und urteilst, aber du behauptest NIE, es selbst getan zu haben.'],
-      ['🎂 Поздравь именинницу', 'Die Nichte der Familie, die heute Geburtstag hat, steht vor dir — den Namen kennst du aus deinem Auftrag. Gratuliere ihr jetzt königlich, kurz und herzlich, vor allen. Kein Alter nennen.'],
-      ['👶 Про малыша-тёзку', 'Der jüngste Enkel der Familie, sechs Wochen alt, trägt den Namen deines Großvaters — den Namen kennst du aus deinem Auftrag. Sag EINEN warmen Satz über den Namensvetter im Haus — kein "Nachfolger", keine Thronfolge, keine Witze über die Krone für das Kind.'],
-      ['🥂 Слово дому', 'Sprich jetzt ein kurzes Wort auf das Haus: hundertfünfundzwanzig Jahre, vier Generationen, vom Floßholz zur Exportkiste. Zwanzig bis vierzig Sekunden, der stärkste Satz zum Schluss.'],
-      ['🎵 Музыкальное пожелание', 'Ein Gast wünscht sich ein Lied. Nimm den Wunsch entgegen und sag zu, dass du ihn den Musikanten vorträgst. Versprich KEIN bestimmtes Lied.'],
-      ['👋 Гость подошёл', 'Ein Gast kommt auf dich zu. Begrüße kurz und frag, wen du vor dir hast.'],
-      ['🗣 Дословно', 'Sage den folgenden Satz WÖRTLICH und unverändert, Wort für Wort: "___" — (впиши точную фразу вместо ___)'],
-    ],
-    FUEHRUNG: [
-      ['🏭 Про эту халле', 'Erzähl, wo ihr steht: hier war das alte Betonwerk Köpenick, hier wurden Betonplatten gemacht, die große Halle wurde in den sechziger Jahren gebaut, das Gelände hatte eigene Gleise. Nur technisch und staunend — kein Wort über DDR, Mauer oder Wende.'],
-      ['📦 Что делает дом', 'Erzähl in deinen Worten, was dieses Haus tut: Kisten und Verpackungen für schwere und empfindliche Maschinen, Paletten, Exportverpackung, und sie verpacken beim Kunden im Werk.'],
-      ['🌲 От сплава к ящикам', 'Die Linie dieses Hauses: die Familie handelte seit dem achtzehnten Jahrhundert mit Floßholz, neunzehnhundert gegründet in Wallenfels, heute Exportkisten für Maschinenbau und Medizintechnik. Dasselbe Holz, dieselbe Familie, ein anderes Jahrhundert.'],
-      ['👋 Гость подошёл', 'Ein Gast kommt auf dich zu. Begrüße kurz und frag, wen du vor dir hast.'],
-      ['🗣 Дословно', 'Sage den folgenden Satz WÖRTLICH und unverändert, Wort für Wort: "___" — (впиши точную фразу вместо ___)'],
-    ],
-    FEST: [
-      ['💃 Открой танцы', 'Eröffne jetzt den Tanz: ein königlicher Befehl an den Saal, kurz und festlich. Du forderst auf und erklärst den Tanz für eröffnet — du behauptest NIE, selbst getanzt zu haben.'],
-      ['🎵 Музыкальное пожелание', 'Ein Gast wünscht sich ein Lied. Nimm den Wunsch entgegen und sag zu, dass du ihn den Musikanten vorträgst. Versprich KEIN bestimmtes Lied.'],
-      ['🤳 Фото', 'Jemand will ein Foto oder Selfie mit dir. Ein königlicher Satz dazu, dann weiter.'],
-      ['👋 Гость подошёл', 'Ein Gast kommt auf dich zu. Begrüße kurz und frag, wen du vor dir hast.'],
-      ['🏁 Заверши разговор', 'Beende dieses Gespräch jetzt freundlich: ein Satz zum Abschied, ein guter Wunsch für den Abend.'],
-      ['🗣 Дословно', 'Sage den folgenden Satz WÖRTLICH und unverändert, Wort für Wort: "___" — (впиши точную фразу вместо ___)'],
-    ],
-  },
+  // 18.09: режимов и быстрых кнопок нет — Макс даёт обстановку голосом
+  // по-русски прямо в микрофон гостей (промпт это понимает как команду оператора)
+  // или текстом в «скрытый контекст». Мозг знает весь вечер целиком.
+  defaultMode: null,
+  modes: {},
+  quick: {},
 
   // Служебные тексты — уходят по каналу ⟦REGIE⟧, гость их произнести не может.
   answerCue: '⟦REGIE⟧ Antworte JETZT auf das Letzte, was der Gast gesagt hat: kurz, normal, als König. '
@@ -470,7 +409,7 @@ function renderQuick(){
 // обрыва связи режим уходит роботу заново (иначе он вернулся бы к дефолту
 // посреди сцены). Текст и подписи режимов правятся в ROBOT.modes.
 let modeKey = ROBOT.modes[LS.get('mode')] ? LS.get('mode') : ROBOT.defaultMode;
-let modeText = ROBOT.modes[modeKey].text;
+let modeText = ROBOT.modes[modeKey]?.text || '';   // 18.09: режимов может не быть вовсе — без ?. здесь молча умирал весь пульт
 function pokazatMode(){
   const m=$('mdNow'); if(!m) return;
   const cur=ROBOT.modes[modeKey];
@@ -1191,29 +1130,33 @@ ptt.addEventListener('contextmenu',e=>e.preventDefault());
 // задай короткий вопрос, но заговори обязательно.
 const ANSWER_CUE = ROBOT.answerCue;
 let answerBusy=false;
+// 18.09: переделано после боевой жалобы. Было: уходила ДЛИННАЯ команда-инструкция
+// ⟦REGIE⟧ «ответь сейчас; если ничего не слышал — скажи, что шумно, и попроси
+// повторить». Сервер принимал её как НОВУЮ реплику гостя, а живой транскрипт
+// ещё не был закрыт — и робот отвечал ровно на команду: «ich habe Euch nicht
+// verstanden, sagt es noch einmal». Плюс вторая ступень дёргала микрофон и он
+// мог не вернуться.
+// Стало: уходит короткое «Das war's.» — устная точка, которую промпт (§7.9b)
+// УЖЕ знает: «гость договорил, отвечай на то, что было сказано ДО этих слов».
+// Микрофон закрывается на 0,4 с ПЕРЕД отправкой (чтобы сервер увидел тишину и
+// закрыл ход) и возвращается в finally ВСЕГДА, без условий.
+const TOCHKA = "Das war's.";
 async function answerNow(){
   if(answerBusy) return;
   const b=$('answerNow'), was=b.innerHTML;
   answerBusy=true; vibrate([50,40,50]);
   b.innerHTML='⏳ отвечает…'; b.disabled=true;
+  const byloOtkryto = micWanted;
   try{
     if(!await ensureConn()){ log('⚠️ ОТВЕЧАЙ не ушло — нет связи'); otklik(b,'нет связи',false); flash('⚠️ Нет связи — сначала «Подключиться»'); return; }
     if(quiet) setQuiet(false);
-    // 14.09, конференция: в гуле зала сервер держит ход гостя «открытым» и команда встаёт
-    // в очередь. Две ступени: 1) команда СРАЗУ, микрофон не трогаем (звук течёт — серверу
-    // есть в чём услышать тишину); 2) если за 2,5 с робот не заговорил — 1,5 с закрытого
-    // входа, чтобы ход гостя точно закрылся, потом вход обратно (в режиме «руки свободны»).
+    if(byloOtkryto){ micWanted=false; applyMic(); await new Promise(r=>setTimeout(r,400)); }
     expectReply();
-    try{ conv.sendUserMessage(ANSWER_CUE); log('⏭ ОТВЕЧАЙ — команда ушла'); }
+    try{ conv.sendUserMessage(TOCHKA); log('⏭ ОТВЕЧАЙ — точка ушла, отвечает на сказанное'); }
     catch(e){ log('⚠️ Не ушло: '+(e?.message||e)); }
-    for(let i=0;i<10 && !agentSpeaking && conv;i++) await new Promise(r=>setTimeout(r,250));
-    if(conv && !agentSpeaking && micWanted && micMode()==='open'){
-      micWanted=false; applyMic(); b.innerHTML='⏳ закрываю ход гостя…';
-      log('⏭ …робот не начал — даю 1,5 с тишины, чтобы закрыть ход гостя');
-      await new Promise(r=>setTimeout(r,1500));
-      if(conv && micMode()==='open' && !quiet){ micWanted=true; applyMic(); }
-    }
   } finally {
+    // микрофон возвращается ВСЕГДА — даже если что-то упало по дороге
+    if(byloOtkryto && conv){ micWanted=true; applyMic(); }
     b.innerHTML=was; b.disabled=false; answerBusy=false;
     otklik(b, conv?'ушло':'нет связи', !!conv);
   }
