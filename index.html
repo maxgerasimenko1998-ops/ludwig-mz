@@ -295,7 +295,7 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 16:20',
+  version: '18.09.2026 16:35',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
@@ -1355,11 +1355,13 @@ const INSTANT={
   // Кнопка «заговорить первым»: раз оператор её нажал — перед роботом ТОЧНО
   // стоит человек.
   qaHello: ROBOT.hello,
-  qaLouder: ROBOT.louder,
   qaBye: ROBOT.bye,
 };
 let instantBusy=false;
 for(const id in INSTANT){
+  // 18.09: без этой проверки удалённая из разметки кнопка роняла ВЕСЬ скрипт
+  // на этой строке — и всё, что ниже (ГОСТЬ СКАЗАЛ, контекст, стоп), молча умирало
+  if(!$(id)) continue;
   $(id).onclick=async()=>{
     if(instantBusy) return;
     // Раньше кнопка молча ждала подключения и «не нажималась» — Макс давил
