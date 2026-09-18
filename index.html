@@ -117,7 +117,7 @@
     <textarea id="dayCtx" placeholder="напр. Wir sind heute in Potsdam auf dem Firmenevent von Firma X. Du schlenderst herum."></textarea>
 
     <button id="connectBtn">▶️ Подключиться</button>
-    <p class="hint">Микрофон включится ТОЛЬКО когда жмёшь «Говорить». Пока робот говорит — микрофон закрыт автоматически (не слышит сам себя).</p>
+    <p class="hint">По умолчанию <b>руки свободны</b>: после подключения микрофон открыт постоянно и «Говорить» жать не надо. Пока робот говорит — микрофон закрыт автоматически, чтобы он не слышал сам себя.</p>
   </div>
 
   <!-- ЭКРАН РАБОТЫ -->
@@ -307,7 +307,7 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 15:05',
+  version: '18.09.2026 16:00',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
