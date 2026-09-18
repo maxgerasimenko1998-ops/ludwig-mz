@@ -41,6 +41,7 @@
     transition:background .15s;
   }
   /* полноэкранная индикация состояния — видно с одного взгляда в толпе */
+  body.flash { box-shadow: inset 0 0 0 6px var(--gold); }
   body.s-listen { background:#3a1416; }   /* микрофон открыт — слушаю гостя */
   body.s-speak  { background:#1a1636; }   /* робот говорит */
   h1 { font-size:19px; color:var(--gold); text-align:center; padding:2px 0; }
@@ -120,7 +121,13 @@
   </div>
 
   <!-- ЭКРАН РАБОТЫ -->
-  <label style="position:fixed;left:-9999px;top:0" aria-hidden="true"><input type="checkbox" switch id="haptSw"></label>
+  <!-- ТАКТИЛЬНЫЙ ОТКЛИК НА АЙФОНЕ. navigator.vibrate в Safari не существует вовсе
+       (WebKit его не поддерживает), поэтому единственный доступный способ — переключатель
+       с атрибутом switch: iOS 17.4+ отдаёт на него системный «тик». 18.09: раньше он стоял
+       за экраном (left:-9999px) — Safari тактильный отклик для невидимых элементов не даёт.
+       Теперь он в потоке страницы, размером 1 пиксель и прозрачный. Если тика всё равно нет,
+       проверь на телефоне: Настройки → Звуки, тактильность → Системная тактильная отдача. -->
+  <label style="position:absolute;width:1px;height:1px;opacity:.01;pointer-events:none" aria-hidden="true"><input type="checkbox" switch id="haptSw"></label>
   <div id="live" class="hidden" style="display:none;flex-direction:column;gap:12px">
     <button id="ptt">🎤 ГОВОРИТЬ<br><small>микрофон выключен</small></button>
     <div id="micModeRow" style="display:flex;gap:8px">
@@ -300,7 +307,7 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 14:40',
+  version: '18.09.2026 15:05',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
@@ -360,7 +367,16 @@ let hiddenLog=[];         // отправленные скрытые конте�
 const HIDDEN_MAX=12;      // за 3 часа их накопились бы десятки и каждый реконнект гнал бы всё заново
 let pendingRegie=false;   // была ли команда режиссёра до обрыва
 
-function vibrate(ms){ try{ navigator.vibrate?.(ms); }catch{} try{ $('haptSw')?.click(); }catch{} }
+function vibrate(ms){
+  try{ navigator.vibrate?.(ms); }catch{}
+  try{ $('haptSw')?.click(); }catch{}
+  // На айфоне вибрации у веб-страницы нет, а в зале нужен отклик, который видно
+  // не глядя на кнопку: весь экран коротко светлеет.
+  try{
+    const b=document.body; b.classList.add('flash');
+    clearTimeout(vibrate._t); vibrate._t=setTimeout(()=>b.classList.remove('flash'), 160);
+  }catch{}
+}
 // Видимый отклик кнопки: зелёная + надпись на 1.4 с, потом как было. ok=false — красная.
 function otklik(b, tekst, ok=true){
   if(!b) return;
