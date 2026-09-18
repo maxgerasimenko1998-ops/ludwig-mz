@@ -295,7 +295,7 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 16:05',
+  version: '18.09.2026 16:20',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
@@ -1140,7 +1140,10 @@ let answerBusy=false;
 // УЖЕ знает: «гость договорил, отвечай на то, что было сказано ДО этих слов».
 // Микрофон закрывается на 0,4 с ПЕРЕД отправкой (чтобы сервер увидел тишину и
 // закрыл ход) и возвращается в finally ВСЕГДА, без условий.
-const TOCHKA = "Das war's.";
+// 18.09, прогон: голое «Das war's.» без расслышанной реплики робот принял за
+// ПРОЩАНИЕ гостя и начал прощаться сам. Поэтому сигнал — служебный токен без
+// собственного смысла, значение ему задаёт бриф (§10).
+const TOCHKA = '\u27e6REGIE\u27e7 Der Gast hat zu Ende gesprochen — antworte JETZT auf das, was er gesagt hat.';
 async function answerNow(){
   if(answerBusy) return;
   const b=$('answerNow'), was=b.innerHTML;
