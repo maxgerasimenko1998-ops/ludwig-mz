@@ -127,6 +127,11 @@
       <button id="mmOpen" style="flex:1;height:60px;background:#1e8449">🙌 СВОБОДНЫЕ РУКИ<br><small>слушает сам, всегда</small></button>
       <button id="mmToggle" style="flex:1;height:60px;background:#555">👆 ПО КНОПКЕ<br><small>слушает только после «ГОВОРИТЬ»</small></button>
     </div>
+    <!-- 18.09: оператор должен ВИДЕТЬ, что робот расслышал, до того как жать ОТВЕЧАЙ.
+         Раньше это уходило только в мелкий лог внизу, и в зале было не разобрать,
+         молчит он потому что не услышал, или потому что ход гостя не закрылся. -->
+    <div id="lastHeard" style="font-size:14px;line-height:1.35;color:#cfd6df;background:#20242c;
+         border-radius:10px;padding:9px 11px;min-height:38px">услышал: <b style="color:#8a8f98">— пока ничего —</b></div>
     <button id="answerNow" style="height:64px;background:#b8860b;touch-action:manipulation">⏭ ОТВЕЧАЙ<br><small>гость договорил — конец слушания, отвечай сейчас</small></button>
     <button id="stopTalk" style="background:#8e2020;height:64px;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none">✋ ХВАТИТ<br><small>замолчи сейчас · связь жива, нажми ещё раз — снова слушает</small></button>
     <button id="hushBtn2" style="background:#5a1616;height:56px;touch-action:manipulation">⏹ ПОЛНЫЙ СТОП<br><small>связь разорвана, деньги не идут · дальше — «Подключиться»</small></button>
@@ -295,7 +300,7 @@ const ROBOT = {
   ns: 'mz:',                                    // префикс памяти браузера — СВОЙ у каждого пульта (домен GitHub Pages общий)
   agent: 'agent_5901m2t629tyekabczqxt12gjvp3',  // мозг юбилея Müller-Zeiner (deploy_reklama.py --klient mueller-zeiner)
   title: 'Людвиг · 125 лет Müller-Zeiner',
-  version: '18.09.2026 16:35',
+  version: '18.09.2026 14:30',
   dayCtx: 'Freitag, 18. September 2026, Abend. Du bist Ehrengast bei Müller Zeiner Industrieverpackungen in Berlin-Köpenick: das Haus feiert hundertfünfundzwanzig Jahre. Gastgeberin ist Frau Köstner.',
 
   // Режимы вечера — стоячий контекст: уходит роботу при подключении и по нажатию
@@ -952,7 +957,17 @@ async function doConnect(isReconnect){
           }, TAIL_MS);
         }
       },
-      onMessage:({source,message})=>log((source==='ai'?'🤖 ':'🧑 ')+message),
+      onMessage:({source,message})=>{
+        log((source==='ai'?'🤖 ':'🧑 ')+message);
+        if(source!=='ai'){
+          const t=(message||'').trim();
+          // команду пульта (служебный токен) в «услышал» не показываем — это не гость
+          if(t && !t.startsWith('\u27e6')){
+            const el=$('lastHeard');
+            if(el) el.innerHTML='услышал: <b style="color:#e8e8e8">'+t.replace(/[<>]/g,'')+'</b>';
+          }
+        }
+      },
       // страховка на случай, если статус 'disconnected' однажды не долетит:
       // без неё пульт остался бы с виду «подключено» при мёртвой сессии.
       // Двойной вызов безопасен — handleDisconnect проверяет conv.
@@ -1155,8 +1170,16 @@ async function answerNow(){
     if(quiet) setQuiet(false);
     if(byloOtkryto){ micWanted=false; applyMic(); await new Promise(r=>setTimeout(r,400)); }
     expectReply();
-    try{ conv.sendUserMessage(TOCHKA); log('⏭ ОТВЕЧАЙ — точка ушла, отвечает на сказанное'); }
+    try{ conv.sendUserMessage(TOCHKA); log('⏭ ОТВЕЧАЙ — команда ушла, отвечает на сказанное'); }
     catch(e){ log('⚠️ Не ушло: '+(e?.message||e)); }
+    // Если сервер держал ход гостя открытым, первая команда встаёт в очередь
+    // и робот молчит. Ждём 3 секунды и посылаем ещё раз — ОДИН раз, микрофон
+    // при этом не трогаем (дёрганье микрофона и было причиной «он завис»).
+    for(let i=0;i<12 && !agentSpeaking && conv;i++) await new Promise(r=>setTimeout(r,250));
+    if(conv && !agentSpeaking){
+      b.innerHTML='⏳ ещё раз…';
+      try{ conv.sendUserMessage(TOCHKA); log('⏭ ОТВЕЧАЙ — повтор: робот не начал за 3 с'); }catch{}
+    }
   } finally {
     // микрофон возвращается ВСЕГДА — даже если что-то упало по дороге
     if(byloOtkryto && conv){ micWanted=true; applyMic(); }
